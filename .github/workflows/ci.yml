@@ -70,31 +70,22 @@ jobs:
       with:
         node-version: '18'
         
-    - name: Get npm cache directory
-      id: npm-cache-dir
-      run: |
-        echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-        
-    - name: Cache npm dependencies
+    - name: Cache node_modules
       uses: actions/cache@v3
       id: npm-cache
       with:
-        path: |
-          ${{ steps.npm-cache-dir.outputs.dir }}
-          frontend/node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+        path: frontend/node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package.json') }}
         restore-keys: |
-          ${{ runner.os }}-node-
+          ${{ runner.os }}-node-modules-
         
     - name: Install frontend dependencies
       working-directory: ./frontend
-      run: |
-        npm ci
+      run: npm install
         
     - name: Run frontend tests
       working-directory: ./frontend
-      run: |
-        npm test -- --coverage --watchAll=false
+      run: npm test -- --coverage --watchAll=false
       env:
         REACT_APP_API_URL: http://localhost:5000
         CI: true
