@@ -74,13 +74,16 @@ jobs:
       uses: actions/cache@v3
       id: npm-cache
       with:
-        path: frontend/node_modules
-        key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package.json') }}
+        path: |
+          ~/.npm
+          frontend/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-node-modules-
+          ${{ runner.os }}-node-
         
     - name: Install frontend dependencies
       working-directory: ./frontend
+      if: steps.npm-cache.outputs.cache-hit != 'true'
       run: npm install
         
     - name: Run frontend tests
@@ -95,6 +98,15 @@ jobs:
       with:
         file: frontend/coverage/coverage-final.json
         flags: frontend
+
+    - name: Post Cache node_modules
+      if: always()
+      uses: actions/cache/save@v3
+      with:
+        path: |
+          ~/.npm
+          frontend/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
         
   deploy:
     needs: [backend-tests, frontend-tests]
