@@ -69,17 +69,31 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Get npm cache directory
+      id: npm-cache-dir
+      run: |
+        echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+        
+    - name: Cache npm dependencies
+      uses: actions/cache@v3
+      id: npm-cache
+      with:
+        path: |
+          ${{ steps.npm-cache-dir.outputs.dir }}
+          frontend/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
         
     - name: Install frontend dependencies
+      working-directory: ./frontend
       run: |
-        cd frontend
         npm ci
         
     - name: Run frontend tests
+      working-directory: ./frontend
       run: |
-        cd frontend
         npm test -- --coverage --watchAll=false
       env:
         REACT_APP_API_URL: http://localhost:5000
@@ -102,11 +116,3 @@ jobs:
     - name: Deploy to production
       run: |
         echo "Deployment step - configure based on your hosting platform"
-      # Add actual deployment steps based on your hosting platform
-      # For example, deploying to Heroku:
-      # - name: Deploy to Heroku
-      #   uses: akhileshns/heroku-deploy@v3.12.12
-      #   with:
-      #     heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-      #     heroku_app_name: "your-app-name"
-      #     heroku_email: "your-email@example.com"
