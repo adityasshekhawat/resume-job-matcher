@@ -22,12 +22,20 @@ jobs:
           --health-retries 5
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.9'
+        
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
         
     - name: Install Python dependencies
       run: |
@@ -39,31 +47,49 @@ jobs:
     - name: Run backend tests
       run: |
         cd backend
-        pytest --cov=app tests/
+        pytest --cov=app tests/ --cov-report=xml
       env:
         SECRET_KEY: test-secret-key
         DATABASE_URL: sqlite:///test.db
+        REDIS_URL: redis://localhost:6379/0
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: backend/coverage.xml
+        flags: backend
         
   frontend-tests:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: Set up Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
         
     - name: Install frontend dependencies
       run: |
         cd frontend
-        npm install
+        npm ci
         
     - name: Run frontend tests
       run: |
         cd frontend
-        npm test -- --coverage
+        npm test -- --coverage --watchAll=false
+      env:
+        REACT_APP_API_URL: http://localhost:5000
+        CI: true
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: frontend/coverage/coverage-final.json
+        flags: frontend
         
   deploy:
     needs: [backend-tests, frontend-tests]
@@ -71,11 +97,11 @@ jobs:
     if: github.ref == 'refs/heads/main'
     
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: Deploy to production
       run: |
-        echo "Add your deployment steps here"
+        echo "Deployment step - configure based on your hosting platform"
       # Add actual deployment steps based on your hosting platform
       # For example, deploying to Heroku:
       # - name: Deploy to Heroku
