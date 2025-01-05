@@ -112,10 +112,11 @@ const Dashboard = () => {
         >
           <input
             type="file"
+            accept=".pdf,.docx"
+            style={{ display: 'none' }}
             ref={fileInputRef}
             onChange={handleFileSelect}
-            style={{ display: 'none' }}
-            accept=".pdf,.docx"
+            data-testid="file-input"
           />
           <Button
             variant="contained"

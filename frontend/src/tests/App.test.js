@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { BrowserRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
 import App from '../App';
 import authReducer from '../store/slices/authSlice';
@@ -37,12 +36,10 @@ const store = configureStore({
 test('renders app without crashing', () => {
   render(
     <Provider store={store}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <App />
     </Provider>
   );
   
-  // Verify that the home page content is rendered
-  expect(screen.getByText(/Resume Job Matcher/i)).toBeInTheDocument();
+  // Verify that the login page content is rendered (since we're not authenticated)
+  expect(screen.getByText(/Login/i)).toBeInTheDocument();
 });
