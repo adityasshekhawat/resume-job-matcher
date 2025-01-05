@@ -12,9 +12,12 @@ def create_app(config_class=Config):
     CORS(app)
     db.init_app(app)
     
-    from app.controllers import auth, resume, jobs
+    from app.controllers import auth, resume
     app.register_blueprint(auth.bp)
     app.register_blueprint(resume.bp)
-    app.register_blueprint(jobs.bp)
+    
+    @app.route('/')
+    def home():
+        return {"message": "Resume Job Matcher API"}, 200
     
     return app
